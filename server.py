@@ -20,14 +20,55 @@ def get_ip():
 def threaded(conn, addr): 
     s_addr = get_ip()
     d_addr = addr[0]
+    prime = -1
+    gen = -1
+    y1 = -1
+    y2 = -1    
 
-    msg = conn.recv(calcsize('iqq160slllll1024sii'))
-    print(unpack_message(msg))
+    while True:
+        msg = conn.recv(calcsize('iqq160slllll1024sii'))
+        msg = unpack_message(msg)
+        print("Received from client: ", msg)
 
-    # while True:
-    #     msg = conn.recv(calcsize('iqq10s10si10si80si'))
-    #     msg = unpack_message(msg)
-    #     print("Received from client: ", msg)
+        if msg['opcode'] == EXIT:
+            print("Client ", addr, " has disconnected!!")
+            conn.close()
+            exit()
+
+        if msg['opcode'] == PUBKEY:
+            print("Received PUBKEY message from Client", addr)
+            prime = msg['q']
+            gen = msg['g']
+            y1 = msg['y1']
+            y2 = msg['y2']
+            print("Client", addr, "sent : Prime -" ,prime, ", gen-", gen, ", Y1-", y1, ", Y2-", y2)
+            continue
+
+        elif msg['opcode'] == SIGNEDMSG:
+            print("Received SIGNEDMSG message from Client", addr)
+            message = msg['plaintext']
+            c = msg['c']
+            s = msg['s']
+            recv_c = c
+            print("Client", addr, "sent : message -" ,message, ", c-", c, ", s-", s)
+            c = int(c,16)
+
+            y1_inv = euclid_mod_inverse(y1, prime)
+            y2_inv = euclid_mod_inverse(y2, prime)
+            A_1 = (mod_expo(gen, s, prime) * mod_expo(y1_inv, c, prime))%prime
+            B_1 = (mod_expo(y1, s, prime) * mod_expo(y2_inv, c, prime))%prime
+
+            print("A1:", A_1, "B1:", B_1)
+
+            out = str(A_1).encode() + str(B_1).encode() + message.encode()
+            print(out)
+            c_1 = hashlib.sha1(out).hexdigest()
+            print("Generated c_1:", c_1)
+
+            if c_1 == recv_c:
+                print("Received message -", message , "has been verified!!")
+            else:
+                print("Received Message failed to Verify!!!")
 
     conn.close() 
 
