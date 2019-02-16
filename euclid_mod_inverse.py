@@ -33,4 +33,4 @@ def euclid_mod_inverse(a, m):
 		x = x + M
 	return x
 
-print(euclid_mod_inverse(3,23))
+#print(euclid_mod_inverse(3,23))
