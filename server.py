@@ -36,6 +36,7 @@ def threaded(conn, addr):
             exit()
 
         if msg['opcode'] == PUBKEY:
+            #receiving PUBKEY from the client
             print("Received PUBKEY message from Client", addr)
             prime = msg['q']
             gen = msg['g']
@@ -45,6 +46,7 @@ def threaded(conn, addr):
             continue
 
         elif msg['opcode'] == SIGNEDMSG:
+            #receiving SIGNEDMSG from the client
             print("Received SIGNEDMSG message from Client", addr)
             message = msg['plaintext']
             c = msg['c']
@@ -53,22 +55,31 @@ def threaded(conn, addr):
             print("Client", addr, "sent : message -" ,message, ", c-", c, ", s-", s)
             c = int(c,16)
 
+            #running the verification algorithm
             y1_inv = euclid_mod_inverse(y1, prime)
             y2_inv = euclid_mod_inverse(y2, prime)
             A_1 = (mod_expo(gen, s, prime) * mod_expo(y1_inv, c, prime))%prime
             B_1 = (mod_expo(y1, s, prime) * mod_expo(y2_inv, c, prime))%prime
 
             print("A1:", A_1, "B1:", B_1)
-
+            #recomputing the hash using the generated A and B values
             out = str(A_1).encode() + str(B_1).encode() + message.encode()
-            print(out)
+            # print(out)
             c_1 = hashlib.sha1(out).hexdigest()
             print("Generated c_1:", c_1)
 
+            status = -1
+
             if c_1 == recv_c:
                 print("Received message -", message , "has been verified!!")
+                status = 1
             else:
                 print("Received Message failed to Verify!!!")
+                status = -1
+
+            #sending the verification status to the client
+            msg = create_message(s_addr=s_addr,d_addr=d_addr, opcode = VERSTATUS, ver_status = status)
+            conn.sendall(msg)
 
     conn.close() 
 

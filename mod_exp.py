@@ -1,5 +1,6 @@
 import sys
 
+# code for modular exponentiation
 def mod_expo(a, b, c):
 	ans = 1;
 	a = a%c;

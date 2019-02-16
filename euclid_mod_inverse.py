@@ -1,3 +1,4 @@
+# function to find gcd of two numbers
 def gcd(a, b):
 	if a == 0:
 		return b
@@ -10,7 +11,7 @@ def gcd(a, b):
 			b = b-a
 	return a;
 
-# for a^-1 mod (m)
+# code for eulid's modular inverse algorithm
 def euclid_mod_inverse(a, m):
 	if gcd(a,m) != 1:
 		return -1
@@ -20,8 +21,8 @@ def euclid_mod_inverse(a, m):
 	if m == 1:
 		return 0
 	while(a>1):
-		q = a//m #quotient
-		t = m #divisor
+		q = a//m # quotient
+		t = m # divisor
 
 		m = a%m
 		a = t
